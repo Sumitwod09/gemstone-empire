@@ -12,6 +12,12 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient();
 
+    // If Supabase is not configured, skip auth and run in demo mode
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -34,6 +40,7 @@ export function useAuth() {
 
   const signOut = async () => {
     const supabase = createClient();
+    if (!supabase) return;
     await supabase.auth.signOut();
   };
 

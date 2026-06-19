@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Input, Button } from "@/components/ui";
 import { toast } from "sonner";
 import Link from "next/link";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/account";
@@ -22,6 +22,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     const supabase = createClient();
+
+    if (!supabase) {
+      toast.success(mode === "login" ? "Logged in (Mock Mode)" : "Account created (Mock Mode)!");
+      router.push(redirect);
+      setLoading(false);
+      return;
+    }
 
     try {
       if (mode === "login") {
@@ -113,5 +120,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center text-sm text-[var(--color-text-muted)]">Loading auth form...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

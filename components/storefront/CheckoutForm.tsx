@@ -113,7 +113,7 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
             name: data.full_name,
             contact: data.phone,
           },
-          theme: { color: "#92400E" },
+          theme: { color: "#006B3F" },
         });
         rzp.open();
       };

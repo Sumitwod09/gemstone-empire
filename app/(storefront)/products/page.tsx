@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui";
 import type { ProductFilters } from "@/types";
 
 export const metadata: Metadata = {
-  title: "All Gemstones",
+  title: "All Gemstones — Gemstone Empire",
   description: "Browse our full collection of loose precious and semi-precious gemstones.",
 };
 
@@ -82,16 +82,16 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const categories = await getCategories();
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-10">
+    <div className="max-w-screen-xl mx-auto px-6 py-6 text-left">
       <h1
-        className="text-3xl font-bold text-[var(--color-text-primary)] mb-8"
+        className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-6"
         style={{ fontFamily: "var(--font-display)" }}
       >
-        All Gemstones
+        Shop Loose Natural Gemstones
       </h1>
-      <div className="flex gap-8">
+      <div className="flex flex-col gap-4">
         <FilterSidebar categories={categories} />
-        <div className="flex-1 min-w-0">
+        <div className="w-full">
           <Suspense fallback={<Spinner className="mx-auto mt-16" size="lg" />}>
             <ProductGrid searchParams={params} />
           </Suspense>
