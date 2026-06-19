@@ -1,9 +1,23 @@
 import type { Category, Product, GemVariant, GemImage } from "@/types";
 
+const getLocalGemImage = (seed: string): string => {
+  if (seed.includes("ruby")) return "/images/gem_ruby.png";
+  if (seed.includes("sapphire-blue") || seed.includes("kashmir")) return "/images/gem_sapphire.png";
+  if (seed.includes("sapphire-pink")) return "/images/gem_pink_sapphire.png";
+  if (seed.includes("teal-sapphire")) return "/images/gem_teal_sapphire.png";
+  if (seed.includes("emerald")) return "/images/gem_emerald.png";
+  if (seed.includes("paraiba")) return "/images/gem_paraiba.png";
+  if (seed.includes("spinel")) return "/images/gem_spinel.png";
+  if (seed.includes("alexandrite")) return "/images/gem_alexandrite.png";
+  if (seed.includes("chrome-tourmaline")) return "/images/gem_chrome_tourmaline.png";
+  if (seed.includes("rubellite")) return "/images/gem_rubellite.png";
+  return `https://picsum.photos/seed/${seed}/800/600`;
+};
+
 const img = (seed: string, id: string): GemImage => ({
   id,
   variant_id: `var-${seed}`,
-  url: `https://picsum.photos/seed/${seed}/800/600`,
+  url: getLocalGemImage(seed),
   alt_text: seed,
   sort_order: 0,
   is_primary: true,
@@ -21,12 +35,12 @@ const localImg = (path: string, alt: string, id: string): GemImage => ({
 });
 
 export const MOCK_CATEGORIES: Category[] = [
-  { id: "cat-1", name: "Ruby", slug: "ruby", description: "Natural rubies from Burma, Mozambique and Sri Lanka", image_url: "https://picsum.photos/seed/ruby-cat/600/400", sort_order: 1, is_active: true, created_at: "2026-01-01T00:00:00Z" },
-  { id: "cat-2", name: "Sapphire", slug: "sapphire", description: "Blue, pink and fancy sapphires from Ceylon and Kashmir", image_url: "https://picsum.photos/seed/sapphire-cat/600/400", sort_order: 2, is_active: true, created_at: "2026-01-01T00:00:00Z" },
-  { id: "cat-3", name: "Emerald", slug: "emerald", description: "Colombian and Zambian emeralds", image_url: "https://picsum.photos/seed/emerald-cat/600/400", sort_order: 3, is_active: true, created_at: "2026-01-01T00:00:00Z" },
-  { id: "cat-4", name: "Alexandrite", slug: "alexandrite", description: "Color-change alexandrite from Brazil and Russia", image_url: "https://picsum.photos/seed/alex-cat/600/400", sort_order: 4, is_active: true, created_at: "2026-01-01T00:00:00Z" },
-  { id: "cat-5", name: "Tourmaline", slug: "tourmaline", description: "Paraiba, rubellite and chrome tourmalines", image_url: "https://picsum.photos/seed/tourm-cat/600/400", sort_order: 5, is_active: true, created_at: "2026-01-01T00:00:00Z" },
-  { id: "cat-6", name: "Spinel", slug: "spinel", description: "Burmese and Tanzanian spinels in vivid hues", image_url: "https://picsum.photos/seed/spinel-cat/600/400", sort_order: 6, is_active: true, created_at: "2026-01-01T00:00:00Z" },
+  { id: "cat-1", name: "Ruby", slug: "ruby", description: "Natural rubies from Burma, Mozambique and Sri Lanka", image_url: "/images/gem_ruby.png", sort_order: 1, is_active: true, created_at: "2026-01-01T00:00:00Z" },
+  { id: "cat-2", name: "Sapphire", slug: "sapphire", description: "Blue, pink and fancy sapphires from Ceylon and Kashmir", image_url: "/images/gem_sapphire.png", sort_order: 2, is_active: true, created_at: "2026-01-01T00:00:00Z" },
+  { id: "cat-3", name: "Emerald", slug: "emerald", description: "Colombian and Zambian emeralds", image_url: "/images/gem_emerald.png", sort_order: 3, is_active: true, created_at: "2026-01-01T00:00:00Z" },
+  { id: "cat-4", name: "Alexandrite", slug: "alexandrite", description: "Color-change alexandrite from Brazil and Russia", image_url: "/images/gem_alexandrite.png", sort_order: 4, is_active: true, created_at: "2026-01-01T00:00:00Z" },
+  { id: "cat-5", name: "Tourmaline", slug: "tourmaline", description: "Paraiba, rubellite and chrome tourmalines", image_url: "/images/gem_paraiba.png", sort_order: 5, is_active: true, created_at: "2026-01-01T00:00:00Z" },
+  { id: "cat-6", name: "Spinel", slug: "spinel", description: "Burmese and Tanzanian spinels in vivid hues", image_url: "/images/gem_spinel.png", sort_order: 6, is_active: true, created_at: "2026-01-01T00:00:00Z" },
   { id: "cat-7", name: "Diamond", slug: "diamond", description: "Natural diamonds in round, cushion, pear, oval and fancy cuts", image_url: "/images/diamond_round.png", sort_order: 7, is_active: true, created_at: "2026-01-01T00:00:00Z" },
 ];
 
