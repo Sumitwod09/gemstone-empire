@@ -5,7 +5,8 @@ import { GemImageGallery } from "@/components/storefront/GemImageGallery";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { AddToCartSection } from "./AddToCartSection";
-import { formatPrice, formatCarat, formatDimensions } from "@/lib/utils";
+import { formatCarat, formatDimensions } from "@/lib/utils";
+import { Price } from "@/components/storefront/Price";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -139,7 +140,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {primaryVariant && (
                 <div className="space-y-1">
                   <p className="text-3xl font-extrabold text-[#006B3F]">
-                    {formatPrice(primaryVariant.price)}
+                    <Price amount={primaryVariant.price} />
                   </p>
                   <p className="text-xs text-emerald-700 font-bold flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-pulse"></span>

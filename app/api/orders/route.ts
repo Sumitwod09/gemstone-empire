@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   // Calculate totals server-side
   let subtotal = 0;
   const orderItems = items.map((item: { variantId: string; quantity: number }) => {
-    const variant = variants.find((v) => v.id === item.variantId);
+    const variant = variants.find((v: any) => v.id === item.variantId);
     if (!variant) throw new Error(`Variant ${item.variantId} not found`);
     const unitPrice = Number(variant.price);
     const totalPrice = unitPrice * item.quantity;

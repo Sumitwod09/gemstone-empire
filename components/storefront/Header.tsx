@@ -17,6 +17,7 @@ import { faCircleUser as faCircleUserReg } from "@fortawesome/free-regular-svg-i
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import type { Category } from "@/types";
+import { useCurrency, CURRENCIES, CurrencyCode } from "@/components/storefront/CurrencyContext";
 
 interface HeaderProps {
   categories?: Category[];
@@ -29,6 +30,7 @@ export function Header({ categories = [] }: HeaderProps) {
   const { itemCount } = useCart();
   const { user } = useAuth();
   const router = useRouter();
+  const { currency, setCurrencyCode } = useCurrency();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +86,27 @@ export function Header({ categories = [] }: HeaderProps) {
             >
               Help & Contact
             </Link>
+            
+            {/* Location & Currency Switcher */}
+            <div className="relative group py-1">
+              <button className="flex items-center gap-1.5 hover:text-emerald-200 transition-colors font-semibold outline-none cursor-pointer">
+                <span>{currency.symbol} {currency.code}</span>
+                <span className="text-[8px] opacity-80">▼</span>
+              </button>
+              <div className="absolute right-0 top-full mt-1 bg-white text-gray-800 rounded-md shadow-xl border border-gray-100 py-1 hidden group-hover:block z-50 min-w-[125px]">
+                {Object.values(CURRENCIES).map((cur) => (
+                  <button
+                    key={cur.code}
+                    onClick={() => setCurrencyCode(cur.code)}
+                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-emerald-50 hover:text-emerald-700 transition-colors font-medium ${
+                      currency.code === cur.code ? "bg-emerald-50 text-emerald-700 font-bold" : ""
+                    }`}
+                  >
+                    {cur.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -99,7 +122,7 @@ export function Header({ categories = [] }: HeaderProps) {
               <path d="M7.5 10H11.5L16 30L7.5 10Z" fill="#004D2B" />
               <path d="M24.5 10H20.5L16 30L24.5 10Z" fill="#008C52" />
             </svg>
-            <div className="flex items-center">
+            <div className="flex items-center font-logo">
               <span className="text-xl font-extrabold text-[#00A896] tracking-tight uppercase">Gemstone</span>
               <span className="text-xl font-medium text-[#004D2B] tracking-tight uppercase ml-1">Empire</span>
             </div>
@@ -248,7 +271,7 @@ export function Header({ categories = [] }: HeaderProps) {
                   <path d="M7.5 10H11.5L16 30L7.5 10Z" fill="#004D2B" />
                   <path d="M24.5 10H20.5L16 30L24.5 10Z" fill="#008C52" />
                 </svg>
-                <div className="flex items-center">
+                <div className="flex items-center font-logo">
                   <span className="text-base font-extrabold text-[#00A896] tracking-tight uppercase">Gemstone</span>
                   <span className="text-base font-medium text-[#004D2B] tracking-tight uppercase ml-1">Empire</span>
                 </div>

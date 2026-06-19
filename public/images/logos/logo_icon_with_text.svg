@@ -1,0 +1,10 @@
+<svg width="250" height="40" viewBox="0 0 250 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0, 4)">
+    <path d="M16 2L24.5 10L16 30L7.5 10L16 2Z" fill="#00A896" />
+    <path d="M16 2L20.5 10H11.5L16 2Z" fill="#028090" />
+    <path d="M7.5 10H11.5L16 30L7.5 10Z" fill="#004D2B" />
+    <path d="M24.5 10H20.5L16 30L24.5 10Z" fill="#008C52" />
+  </g>
+  <text x="40" y="26" font-family="Butler, Georgia, serif" font-weight="700" font-size="22" fill="#00A896" letter-spacing="0.02em">GEMSTONE</text>
+  <text x="165" y="26" font-family="Butler, Georgia, serif" font-weight="500" font-size="22" fill="#004D2B" letter-spacing="0.02em">EMPIRE</text>
+</svg>

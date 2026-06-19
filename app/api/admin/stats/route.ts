@@ -30,7 +30,7 @@ export async function GET() {
     supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
   ]);
 
-  const total_revenue = revenueData?.reduce((sum, o) => sum + Number(o.total), 0) ?? 0;
+  const total_revenue = revenueData?.reduce((sum: number, o: any) => sum + Number(o.total), 0) ?? 0;
 
   return NextResponse.json({ total_revenue, total_orders: totalOrders, pending_orders: pendingOrders, total_products: totalProducts });
 }

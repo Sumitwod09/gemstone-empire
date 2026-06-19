@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { formatPrice, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { Price } from "@/components/storefront/Price";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import type { Order } from "@/types";
@@ -67,7 +68,7 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
                 <span className="text-[var(--color-text-secondary)]">
                   {item.product_name} × {item.quantity}
                 </span>
-                <span className="font-medium">{formatPrice(item.total_price)}</span>
+                <span className="font-medium"><Price amount={item.total_price} /></span>
               </div>
             ))}
           </div>
@@ -75,7 +76,7 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
 
         <div className="border-t border-[var(--color-border)] pt-3 text-sm font-semibold flex justify-between">
           <span>Total</span>
-          <span>{formatPrice(typedOrder.total)}</span>
+          <span><Price amount={typedOrder.total} /></span>
         </div>
       </div>
 

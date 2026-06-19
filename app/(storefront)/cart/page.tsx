@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui";
-import { formatPrice, formatCarat } from "@/lib/utils";
+import { formatCarat } from "@/lib/utils";
+import { Price } from "@/components/storefront/Price";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faBagShopping } from "@fortawesome/free-solid-svg-icons";
 
@@ -99,7 +100,7 @@ export default function CartPage() {
                       )}
                     </div>
                     <p className="text-sm font-semibold">
-                      {formatPrice(item.variant.price * item.quantity)}
+                      <Price amount={item.variant.price * item.quantity} />
                     </p>
                   </div>
                 </div>
@@ -121,11 +122,11 @@ export default function CartPage() {
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-[var(--color-text-secondary)]">Subtotal</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span><Price amount={subtotal} /></span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--color-text-secondary)]">Shipping</span>
-              <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+              <span>{shipping === 0 ? "Free" : <Price amount={shipping} />}</span>
             </div>
             {subtotal < 500 && subtotal > 0 && (
               <p className="text-xs text-[var(--color-text-muted)]">
@@ -135,7 +136,7 @@ export default function CartPage() {
           </div>
           <div className="border-t border-[var(--color-border)] mt-4 pt-4 flex justify-between font-semibold">
             <span>Total</span>
-            <span>{formatPrice(total)}</span>
+            <span><Price amount={total} /></span>
           </div>
           <Link href="/checkout" className="block mt-4">
             <Button className="w-full" size="lg">

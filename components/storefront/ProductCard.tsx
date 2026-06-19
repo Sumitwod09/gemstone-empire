@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product, GemVariant } from "@/types";
-import { formatPrice, formatCarat } from "@/lib/utils";
+import { formatCarat } from "@/lib/utils";
+import { Price } from "@/components/storefront/Price";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGem } from "@fortawesome/free-solid-svg-icons";
 
@@ -62,10 +63,10 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
           {primaryVariant && (
             <p className="text-base font-bold mt-3" style={{ color: "#006B3F" }}>
-              {formatPrice(primaryVariant.price)}
+              <Price amount={primaryVariant.price} />
               {primaryVariant.compare_at_price && (
                 <span className="text-xs text-[var(--color-text-muted)] line-through ml-2 font-normal">
-                  {formatPrice(primaryVariant.compare_at_price)}
+                  <Price amount={primaryVariant.compare_at_price} />
                 </span>
               )}
             </p>

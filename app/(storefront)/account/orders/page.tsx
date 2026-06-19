@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui";
-import { formatPrice, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { Price } from "@/components/storefront/Price";
 import type { Order } from "@/types";
 
 export const metadata: Metadata = { title: "Order History" };
@@ -59,7 +60,7 @@ export default async function OrderHistoryPage({ searchParams }: PageProps) {
                 </p>
               </div>
               <StatusBadge status={order.status} />
-              <p className="text-sm font-semibold">{formatPrice(order.total)}</p>
+              <p className="text-sm font-semibold"><Price amount={order.total} /></p>
               <Link href={`/order/${order.id}`}>
                 <Button variant="secondary" size="sm">View</Button>
               </Link>

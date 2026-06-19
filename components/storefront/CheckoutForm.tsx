@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, type CheckoutFormData } from "@/lib/validators";
 import { Input, Button, Select } from "@/components/ui";
 import { useCart } from "@/hooks/useCart";
-import { formatPrice } from "@/lib/utils";
+import { Price } from "@/components/storefront/Price";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -215,7 +215,7 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
                 {item.variant.product?.name ?? item.variant.sku} × {item.quantity}
               </span>
               <span className="font-medium">
-                {formatPrice(item.variant.price * item.quantity)}
+                <Price amount={item.variant.price * item.quantity} />
               </span>
             </div>
           ))}
@@ -223,15 +223,15 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
         <div className="border-t border-[var(--color-border)] pt-3 flex flex-col gap-2">
           <div className="flex justify-between text-sm">
             <span className="text-[var(--color-text-secondary)]">Subtotal</span>
-            <span>{formatPrice(subtotal)}</span>
+            <span><Price amount={subtotal} /></span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-[var(--color-text-secondary)]">Shipping</span>
-            <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+            <span>{shipping === 0 ? "Free" : <Price amount={shipping} />}</span>
           </div>
           <div className="flex justify-between text-base font-semibold pt-2 border-t border-[var(--color-border)]">
             <span>Total</span>
-            <span>{formatPrice(total)}</span>
+            <span><Price amount={total} /></span>
           </div>
         </div>
       </aside>

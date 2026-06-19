@@ -1,4 +1,24 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap');
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'Butler';
+  src: url('https://cdn.jsdelivr.net/gh/YoussefHabchi/Butler@master/Webfonts/Butler-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Butler';
+  src: url('https://cdn.jsdelivr.net/gh/YoussefHabchi/Butler@master/Webfonts/Butler-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Butler';
+  src: url('https://cdn.jsdelivr.net/gh/YoussefHabchi/Butler@master/Webfonts/Butler-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+}
 
 @theme {
   --color-bg: #FFFFFF;
@@ -27,8 +47,9 @@
   --color-warning: #FFC107;
   --color-warning-light: #FFF3CD;
 
-  --font-display: var(--font-cormorant);
-  --font-body: var(--font-inter);
+  --font-display: 'Satoshi', system-ui, sans-serif;
+  --font-body: 'Satoshi', system-ui, sans-serif;
+  --font-butler: 'Butler', serif;
 }
 
 /* Force CSS custom properties at highest cascade layer */
@@ -67,7 +88,7 @@ html {
     overflow-x: hidden;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
-    font-family: var(--font-body), system-ui, sans-serif;
+    font-family: 'Satoshi', system-ui, sans-serif;
   }
 
   a {
@@ -97,4 +118,9 @@ html {
 }
 .star-empty {
   color: #DEE2E6 !important;
+}
+
+/* Butler font logo style helper */
+.font-logo {
+  font-family: 'Butler', 'Times New Roman', serif !important;
 }
