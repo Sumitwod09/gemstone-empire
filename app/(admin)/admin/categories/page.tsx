@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { MOCK_CATEGORIES } from "@/lib/mock-data";
 import { CategoryManager } from "./CategoryManager";
-import type { Category } from "@/types";
 
 export const metadata: Metadata = { title: "Categories — Admin" };
 
-export default async function AdminCategoriesPage() {
-  const supabase = await createClient();
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*")
-    .order("sort_order");
-
+export default function AdminCategoriesPage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-6">
-        Categories
-      </h1>
-      <CategoryManager categories={(categories as Category[]) ?? []} />
+      <div className="mb-6 text-left">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Categories</h1>
+        <p className="text-xs text-gray-400 mt-0.5">Manage gemstone storefront product categories</p>
+      </div>
+      <CategoryManager categories={MOCK_CATEGORIES} />
     </div>
   );
 }

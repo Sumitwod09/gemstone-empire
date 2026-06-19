@@ -7,18 +7,17 @@ import { categorySchema, type CategoryFormData } from "@/lib/validators";
 import { Input, Textarea, Button, Badge } from "@/components/ui";
 import { slugify } from "@/lib/utils";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import type { Category } from "@/types";
 
 interface CategoryManagerProps {
   categories: Category[];
 }
 
-export function CategoryManager({ categories }: CategoryManagerProps) {
+export function CategoryManager({ categories: initialCategories }: CategoryManagerProps) {
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -27,7 +26,7 @@ export function CategoryManager({ categories }: CategoryManagerProps) {
 
   const openNew = () => {
     setEditing(null);
-    reset({ is_active: true, sort_order: 0 });
+    reset({ is_active: true, sort_order: 0, name: "", slug: "", description: "", image_url: "", meta_title: "", meta_description: "" });
     setShowForm(true);
   };
 
@@ -48,82 +47,115 @@ export function CategoryManager({ categories }: CategoryManagerProps) {
 
   const onSubmit = async (data: CategoryFormData) => {
     setLoading(true);
-    try {
-      const url = editing ? `/api/admin/categories/${editing.id}` : "/api/admin/categories";
-      const method = editing ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error();
-      toast.success(editing ? "Category updated" : "Category created");
-      setShowForm(false);
-      router.refresh();
-    } catch {
-      toast.error("Failed to save category");
-    } finally {
-      setLoading(false);
+    // Simulate slight latency for premium feel
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    if (editing) {
+      setCategories((prev) =>
+        prev.map((c) =>
+          c.id === editing.id
+            ? ({
+                ...c,
+                name: data.name,
+                slug: data.slug,
+                description: data.description || undefined,
+                image_url: data.image_url || undefined,
+                sort_order: data.sort_order ?? 0,
+                is_active: !!data.is_active,
+                meta_title: data.meta_title || undefined,
+                meta_description: data.meta_description || undefined,
+              } as Category)
+            : c
+        )
+      );
+      toast.success("Category updated (Local Mock Mode)");
+    } else {
+      const newCat: Category = {
+        id: `cat-${Date.now()}`,
+        name: data.name,
+        slug: data.slug,
+        description: data.description || undefined,
+        image_url: data.image_url || undefined,
+        sort_order: data.sort_order ?? 0,
+        is_active: !!data.is_active,
+        meta_title: data.meta_title || undefined,
+        meta_description: data.meta_description || undefined,
+        created_at: new Date().toISOString(),
+      };
+      setCategories((prev) => [...prev, newCat]);
+      toast.success("Category created (Local Mock Mode)");
     }
+
+    setLoading(false);
+    setShowForm(false);
   };
 
-  const deleteCategory = async (id: string) => {
+  const deleteCategory = (id: string) => {
     if (!confirm("Delete this category?")) return;
-    try {
-      await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
-      toast.success("Category deleted");
-      router.refresh();
-    } catch {
-      toast.error("Failed to delete category");
-    }
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+    toast.success("Category deleted (Local Mock Mode)");
   };
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-end">
-        <Button onClick={openNew}>+ Add Category</Button>
+        <Button onClick={openNew} className="bg-emerald-600 hover:bg-emerald-700">
+          + Add Category
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {categories.map((cat) => (
-          <div key={cat.id} className="bg-white border border-[var(--color-border)] rounded-[8px] p-4 flex flex-col gap-2">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-semibold">{cat.name}</p>
-              <Badge variant={cat.is_active ? "success" : "default"}>
-                {cat.is_active ? "Active" : "Inactive"}
-              </Badge>
+          <div key={cat.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold text-gray-800">{cat.name}</p>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  cat.is_active
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                    : "bg-gray-100 text-gray-500 border border-gray-200"
+                }`}>
+                  {cat.is_active ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <p className="text-[10px] font-mono text-gray-400">/products?category={cat.slug}</p>
+              {cat.description && (
+                <p className="text-xs text-gray-500 line-clamp-2 mt-1">{cat.description}</p>
+              )}
             </div>
-            <p className="text-xs text-[var(--color-text-muted)]">/products?category={cat.slug}</p>
-            {cat.description && (
-              <p className="text-xs text-[var(--color-text-secondary)] line-clamp-2">{cat.description}</p>
-            )}
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-4 pt-3 border-t border-gray-50">
               <Button size="sm" variant="secondary" onClick={() => openEdit(cat)}>Edit</Button>
-              <Button size="sm" variant="danger" onClick={() => deleteCategory(cat.id)}>Delete</Button>
+              <Button size="sm" variant="danger" className="bg-red-50 text-red-600 hover:bg-red-100 border-none" onClick={() => deleteCategory(cat.id)}>Delete</Button>
             </div>
           </div>
         ))}
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40">
-          <div className="bg-white rounded-[8px] border border-[var(--color-border)] p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-base font-semibold mb-4">{editing ? "Edit Category" : "New Category"}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h2 className="text-base font-bold text-gray-800 mb-4">{editing ? "Edit Category" : "New Category"}</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-              <Input label="Name" {...register("name")} error={errors.name?.message}
-                onChange={(e) => { setValue("name", e.target.value); if (!editing) setValue("slug", slugify(e.target.value)); }}
+              <Input
+                label="Name"
+                {...register("name")}
+                error={errors.name?.message}
+                onChange={(e) => {
+                  setValue("name", e.target.value);
+                  if (!editing) setValue("slug", slugify(e.target.value));
+                }}
               />
               <Input label="Slug" {...register("slug")} error={errors.slug?.message} />
               <Textarea label="Description" {...register("description")} rows={2} />
               <Input label="Image URL" {...register("image_url")} />
               <Input label="Sort Order" type="number" {...register("sort_order", { valueAsNumber: true })} />
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" {...register("is_active")} className="accent-[var(--color-accent)]" />
+              <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-600 font-medium">
+                <input type="checkbox" {...register("is_active")} className="accent-emerald-600 rounded" />
                 Active
               </label>
-              <div className="flex gap-2 pt-2 border-t border-[var(--color-border)]">
-                <Button type="submit" loading={loading}>Save</Button>
+              <div className="flex gap-2 pt-4 mt-2 border-t border-gray-100 justify-end">
                 <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button type="submit" loading={loading} className="bg-emerald-600 hover:bg-emerald-700">Save</Button>
               </div>
             </form>
           </div>

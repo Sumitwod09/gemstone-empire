@@ -1,29 +1,27 @@
-import { Card } from "@/components/ui";
-
 interface StatsCardProps {
   label: string;
   value: string | number;
   icon?: React.ReactNode;
-  trend?: string;
+  trend?: React.ReactNode;
 }
 
 export function StatsCard({ label, value, icon, trend }: StatsCardProps) {
   return (
-    <Card className="flex items-start justify-between">
-      <div>
-        <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-1">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider mb-1 truncate">
           {label}
         </p>
-        <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
+        <p className="text-lg md:text-2xl font-extrabold text-gray-900">
           {value}
         </p>
         {trend && (
-          <p className="text-xs text-[var(--color-text-muted)] mt-1">{trend}</p>
+          <div className="text-[10px] font-semibold mt-1.5">{trend}</div>
         )}
       </div>
       {icon && (
-        <div className="text-[var(--color-accent)] opacity-60">{icon}</div>
+        <div className="text-emerald-500/50 flex-shrink-0 mt-1">{icon}</div>
       )}
-    </Card>
+    </div>
   );
 }

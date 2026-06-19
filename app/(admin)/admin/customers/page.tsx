@@ -1,71 +1,64 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Customers — Admin" };
 
-interface PageProps {
-  searchParams: Promise<{ page?: string }>;
-}
+const MOCK_CUSTOMERS = [
+  { id: "cust-1", full_name: "James Richardson", email: "james@example.com", phone: "+1 (555) 019-2834", joined: "2026-05-12", total_orders: 5 },
+  { id: "cust-2", full_name: "Sarah Chen", email: "sarah.c@example.com", phone: "+86 186 1234 5678", joined: "2026-05-18", total_orders: 3 },
+  { id: "cust-3", full_name: "Marco Bellini", email: "marco@bellini.it", phone: "+39 02 1234567", joined: "2026-05-24", total_orders: 8 },
+  { id: "cust-4", full_name: "Emma Thompson", email: "emma.t@example.co.uk", phone: "+44 7700 900077", joined: "2026-06-01", total_orders: 2 },
+  { id: "cust-5", full_name: "David Park", email: "david.park@example.com", phone: "+82 10 1234 5678", joined: "2026-06-05", total_orders: 1 },
+  { id: "cust-6", full_name: "Lisa Müller", email: "lisa.m@example.de", phone: "+49 170 1234567", joined: "2026-06-10", total_orders: 4 },
+  { id: "cust-7", full_name: "Hiroshi Tanaka", email: "hiroshi.t@example.jp", phone: "+81 90 1234 5678", joined: "2026-06-12", total_orders: 12 },
+  { id: "cust-8", full_name: "Katarina Petrova", email: "katarina.p@example.com", phone: "+359 2 987 6543", joined: "2026-06-14", total_orders: 6 },
+  { id: "cust-9", full_name: "Arthur Pendelton", email: "arthur.p@example.com", phone: "+1 (555) 765-4321", joined: "2026-06-15", total_orders: 1 },
+];
 
-const PAGE_SIZE = 20;
-
-export default async function AdminCustomersPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const supabase = await createClient();
-
-  const page = Math.max(1, parseInt(params.page ?? "1"));
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
-
-  const { data: profiles, count } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
-
-  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
-
+export default function AdminCustomersPage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-6">Customers</h1>
-
-      <div className="bg-white border border-[var(--color-border)] rounded-[8px] overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-              <th className="px-4 py-2.5 text-left text-xs text-[var(--color-text-muted)] font-medium">Name</th>
-              <th className="px-4 py-2.5 text-left text-xs text-[var(--color-text-muted)] font-medium">Phone</th>
-              <th className="px-4 py-2.5 text-left text-xs text-[var(--color-text-muted)] font-medium">Joined</th>
-              <th className="px-4 py-2.5"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {profiles?.map((profile) => (
-              <tr key={profile.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-hover)]">
-                <td className="px-4 py-2.5 font-medium">{profile.full_name}</td>
-                <td className="px-4 py-2.5 text-[var(--color-text-muted)]">{profile.phone ?? "—"}</td>
-                <td className="px-4 py-2.5 text-[var(--color-text-muted)]">{formatDate(profile.created_at)}</td>
-                <td className="px-4 py-2.5">
-                  <Link href={`/admin/orders?customer=${profile.id}`}>
-                    <Button size="sm" variant="secondary">View Orders</Button>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Customers</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{MOCK_CUSTOMERS.length} total registered customers</p>
+        </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-4">
-          {page > 1 && <Link href={`?page=${page - 1}`}><Button variant="secondary" size="sm">Previous</Button></Link>}
-          <span className="text-sm text-[var(--color-text-muted)]">Page {page} of {totalPages}</span>
-          {page < totalPages && <Link href={`?page=${page + 1}`}><Button variant="secondary" size="sm">Next</Button></Link>}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-2.5 text-left text-[10px] text-gray-400 font-bold uppercase tracking-wider">Customer</th>
+                <th className="px-4 py-2.5 text-left text-[10px] text-gray-400 font-bold uppercase tracking-wider">Phone</th>
+                <th className="px-4 py-2.5 text-left text-[10px] text-gray-400 font-bold uppercase tracking-wider">Joined</th>
+                <th className="px-4 py-2.5 text-center text-[10px] text-gray-400 font-bold uppercase tracking-wider">Orders</th>
+                <th className="px-4 py-2.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {MOCK_CUSTOMERS.map((profile, i) => (
+                <tr key={profile.id} className={`border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors ${i % 2 === 1 ? "bg-gray-50/30" : ""}`}>
+                  <td className="px-4 py-3">
+                    <p className="text-xs font-semibold text-gray-800">{profile.full_name}</p>
+                    <p className="text-[10px] text-gray-400">{profile.email}</p>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{profile.phone ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-400">{profile.joined}</td>
+                  <td className="px-4 py-3 text-center text-xs font-semibold text-gray-700">{profile.total_orders}</td>
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/orders?customer=${profile.id}`}>
+                      <Button size="sm" variant="secondary">View Orders</Button>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { variantSchema, type VariantFormData } from "@/lib/validators";
 import { Input, Button, Select } from "@/components/ui";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { formatPrice, formatCarat } from "@/lib/utils";
 import type { GemVariant } from "@/types";
 
@@ -18,12 +17,13 @@ const TREATMENTS = ["heat", "unheated", "beryllium", "none"];
 interface VariantListProps {
   productId: string;
   variants: GemVariant[];
+  onAddVariant?: (variant: GemVariant) => void;
+  onDeleteVariant?: (variantId: string) => void;
 }
 
-export function VariantList({ productId, variants }: VariantListProps) {
+export function VariantList({ productId, variants, onAddVariant, onDeleteVariant }: VariantListProps) {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<VariantFormData>({
     resolver: zodResolver(variantSchema),
@@ -32,58 +32,74 @@ export function VariantList({ productId, variants }: VariantListProps) {
 
   const onSubmit = async (data: VariantFormData) => {
     setLoading(true);
-    try {
-      const res = await fetch(`/api/admin/products/${productId}/variants`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error();
-      toast.success("Variant added");
-      reset();
-      setShowForm(false);
-      router.refresh();
-    } catch {
-      toast.error("Failed to add variant");
-    } finally {
-      setLoading(false);
-    }
+    // Simulate server latency
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const newVar: GemVariant = {
+      id: `var-${Date.now()}`,
+      product_id: productId,
+      sku: data.sku,
+      price: data.price,
+      stock_qty: data.stock_qty,
+      shape: data.shape,
+      carat_weight: data.carat_weight,
+      color: data.color,
+      color_grade: data.color_grade ?? "AAA",
+      clarity: data.clarity ?? "Eye-clean",
+      treatment: data.treatment ?? "none",
+      origin: data.origin ?? "Unknown",
+      cut_grade: data.cut_grade ?? "excellent",
+      length_mm: data.length_mm ?? data.carat_weight * 3.8,
+      width_mm: data.width_mm ?? data.carat_weight * 3.0,
+      depth_mm: data.depth_mm ?? data.carat_weight * 2.2,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      images: [],
+    };
+
+    if (onAddVariant) onAddVariant(newVar);
+    toast.success("Variant added (Local Mock)");
+    reset();
+    setShowForm(false);
+    setLoading(false);
   };
 
   const deleteVariant = async (id: string) => {
     if (!confirm("Delete this variant?")) return;
-    try {
-      await fetch(`/api/admin/variants/${id}`, { method: "DELETE" });
-      toast.success("Variant deleted");
-      router.refresh();
-    } catch {
-      toast.error("Failed to delete variant");
-    }
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (onDeleteVariant) onDeleteVariant(id);
+    toast.success("Variant deleted (Local Mock)");
+    setLoading(false);
   };
 
   return (
     <div className="flex flex-col gap-4">
       {variants.map((v) => (
-        <div key={v.id} className="bg-white border border-[var(--color-border)] rounded-[8px] p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div key={v.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-4 flex-wrap hover:shadow-sm transition-shadow">
           <div>
-            <p className="text-sm font-semibold">{v.sku}</p>
-            <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 capitalize">
-              {v.shape} / {formatCarat(v.carat_weight)} / {v.color}
+            <p className="text-xs font-mono font-bold text-gray-700">{v.sku}</p>
+            <p className="text-xs text-gray-500 mt-0.5 capitalize">
+              {v.shape} / {formatCarat(v.carat_weight)} ct / {v.color}
             </p>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className="font-semibold">{formatPrice(v.price)}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-[4px] ${v.stock_qty === 0 ? "bg-[var(--color-error-light)] text-[var(--color-error)]" : "bg-[var(--color-success-light)] text-[var(--color-success)]"}`}>
+            <span className="font-extrabold text-gray-900">{formatPrice(v.price)}</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              v.stock_qty === 0 
+                ? "bg-red-50 text-red-700 border border-red-100" 
+                : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+            }`}>
               {v.stock_qty === 0 ? "Out of stock" : `${v.stock_qty} in stock`}
             </span>
+            <Button size="sm" variant="danger" className="bg-red-50 text-red-600 hover:bg-red-100 border-none" onClick={() => deleteVariant(v.id)}>Delete</Button>
           </div>
-          <Button size="sm" variant="danger" onClick={() => deleteVariant(v.id)}>Delete</Button>
         </div>
       ))}
 
       {showForm ? (
-        <form onSubmit={handleSubmit(onSubmit)} className="border border-[var(--color-border)] rounded-[8px] p-5 bg-[var(--color-surface)]">
-          <p className="text-sm font-semibold mb-4">Add Variant</p>
+        <form onSubmit={handleSubmit(onSubmit)} className="border border-gray-200 rounded-lg p-5 bg-gray-50/50">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-4">Add Variant Detail</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Input label="SKU" {...register("sku")} error={errors.sku?.message} />
             <Input label="Price (USD)" type="number" step="0.01" {...register("price", { valueAsNumber: true })} error={errors.price?.message} />
@@ -100,9 +116,9 @@ export function VariantList({ productId, variants }: VariantListProps) {
             <Input label="Width (mm)" type="number" step="0.01" {...register("width_mm", { valueAsNumber: true })} />
             <Input label="Depth (mm)" type="number" step="0.01" {...register("depth_mm", { valueAsNumber: true })} />
           </div>
-          <div className="flex gap-2 mt-4">
-            <Button type="submit" size="sm" loading={loading}>Add Variant</Button>
+          <div className="flex gap-2 mt-5 justify-end">
             <Button type="button" variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
+            <Button type="submit" size="sm" loading={loading} className="bg-emerald-600 hover:bg-emerald-700">Add Variant</Button>
           </div>
         </form>
       ) : (

@@ -13,9 +13,10 @@ import type { Product, Category } from "@/types";
 interface ProductEditFormProps {
   product: Product | null;
   categories: Category[];
+  onSave?: (product: Product) => void;
 }
 
-export function ProductEditForm({ product, categories }: ProductEditFormProps) {
+export function ProductEditForm({ product, categories, onSave }: ProductEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +24,6 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -38,46 +38,51 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
           meta_title: product.meta_title ?? "",
           meta_description: product.meta_description ?? "",
         }
-      : { is_active: true, is_featured: false },
+      : { is_active: true, is_featured: false, name: "", slug: "", description: "", category_id: categories[0]?.id || "" },
   });
-
-  const nameValue = watch("name");
 
   const onSubmit = async (data: ProductFormData) => {
     setLoading(true);
-    try {
-      const url = product ? `/api/admin/products/${product.id}` : "/api/admin/products";
-      const method = product ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error();
-      const result = await res.json();
-      toast.success(product ? "Product updated" : "Product created");
-      if (!product) router.push(`/admin/products/${result.id}`);
-      else router.refresh();
-    } catch {
-      toast.error("Failed to save product");
-    } finally {
-      setLoading(false);
+    // Simulate slight server latency
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const selectedCategory = categories.find((c) => c.id === data.category_id);
+
+    const savedProduct: Product = {
+      id: product?.id ?? `prod-${Date.now()}`,
+      name: data.name,
+      slug: data.slug,
+      description: data.description || undefined,
+      category_id: data.category_id,
+      is_active: !!data.is_active,
+      is_featured: !!data.is_featured,
+      meta_title: data.meta_title || undefined,
+      meta_description: data.meta_description || undefined,
+      created_at: product?.created_at ?? new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      category: selectedCategory ? { id: selectedCategory.id, name: selectedCategory.name, slug: selectedCategory.slug, sort_order: 0, is_active: true, created_at: "" } : undefined,
+      variants: product?.variants ?? [],
+    };
+
+    if (onSave) onSave(savedProduct);
+    toast.success(product ? "Product changes saved (Local Mock)" : "Product created successfully (Local Mock)");
+    
+    if (!product) {
+      router.push(`/admin/products/${savedProduct.id}`);
     }
+    setLoading(false);
   };
 
   const deleteProduct = async () => {
     if (!product || !confirm("Delete this product?")) return;
-    try {
-      await fetch(`/api/admin/products/${product.id}`, { method: "DELETE" });
-      toast.success("Product deleted");
-      router.push("/admin/products");
-    } catch {
-      toast.error("Failed to delete product");
-    }
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    toast.success("Product deleted (Local Mock)");
+    router.push("/admin/products");
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 bg-white border border-[var(--color-border)] rounded-[8px] p-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <Input
@@ -117,26 +122,26 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
         <Input label="Meta Description" {...register("meta_description")} />
       </div>
 
-      <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" {...register("is_active")} className="accent-[var(--color-accent)]" />
+      <div className="flex gap-6 mt-2">
+        <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-600 font-medium">
+          <input type="checkbox" {...register("is_active")} className="accent-emerald-600 rounded" />
           Active
         </label>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" {...register("is_featured")} className="accent-[var(--color-accent)]" />
-          Featured
+        <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-600 font-medium">
+          <input type="checkbox" {...register("is_featured")} className="accent-emerald-600 rounded" />
+          Featured on Homepage
         </label>
       </div>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-[var(--color-border)]">
-        <Button type="submit" loading={loading}>
-          {product ? "Save Changes" : "Create Product"}
-        </Button>
+      <div className="flex items-center gap-3 pt-4 border-t border-gray-100 justify-end">
         <Button type="button" variant="secondary" onClick={() => router.back()}>
           Cancel
         </Button>
+        <Button type="submit" loading={loading} className="bg-emerald-600 hover:bg-emerald-700">
+          {product ? "Save Changes" : "Create Product"}
+        </Button>
         {product && (
-          <Button type="button" variant="danger" className="ml-auto" onClick={deleteProduct}>
+          <Button type="button" variant="danger" className="bg-red-50 text-red-600 hover:bg-red-100 border-none mr-auto sm:mr-0" onClick={deleteProduct}>
             Delete Product
           </Button>
         )}
