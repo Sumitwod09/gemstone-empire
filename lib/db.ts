@@ -4,6 +4,7 @@
  * without a Supabase project.
  */
 
+import { cache } from "react";
 import type { Category, Product, PaginatedResponse, ProductFilters } from "@/types";
 import {
   MOCK_CATEGORIES,
@@ -17,7 +18,7 @@ const CONFIGURED =
 
 // ─── Categories ──────────────────────────────────────────────
 
-export async function getCategories(): Promise<Category[]> {
+export const getCategories = cache(async function getCategories(): Promise<Category[]> {
   if (!CONFIGURED) return MOCK_CATEGORIES;
   try {
     const { createClient } = await import("@/lib/supabase/server");
@@ -31,11 +32,11 @@ export async function getCategories(): Promise<Category[]> {
   } catch {
     return MOCK_CATEGORIES;
   }
-}
+});
 
 // ─── Products ────────────────────────────────────────────────
 
-export async function getFeaturedProducts(): Promise<Product[]> {
+export const getFeaturedProducts = cache(async function getFeaturedProducts(): Promise<Product[]> {
   if (!CONFIGURED) return FEATURED_PRODUCTS;
   try {
     const { createClient } = await import("@/lib/supabase/server");
@@ -50,9 +51,9 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   } catch {
     return FEATURED_PRODUCTS;
   }
-}
+});
 
-export async function getProducts(
+export const getProducts = cache(async function getProducts(
   filters: ProductFilters = {}
 ): Promise<PaginatedResponse<Product>> {
   const { page = 1, limit = 24, category, shape, origin, treatment, sort } = filters;
@@ -107,9 +108,9 @@ export async function getProducts(
   } catch {
     return getProducts({ ...filters }); // will hit mock branch on retry after CONFIGURED flips
   }
-}
+});
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
+export const getProductBySlug = cache(async function getProductBySlug(slug: string): Promise<Product | null> {
   if (!CONFIGURED) {
     return MOCK_PRODUCTS.find((p) => p.slug === slug) ?? null;
   }
@@ -126,9 +127,9 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   } catch {
     return MOCK_PRODUCTS.find((p) => p.slug === slug) ?? null;
   }
-}
+});
 
-export async function getRelatedProducts(categoryId: string, excludeId: string): Promise<Product[]> {
+export const getRelatedProducts = cache(async function getRelatedProducts(categoryId: string, excludeId: string): Promise<Product[]> {
   if (!CONFIGURED) {
     return MOCK_PRODUCTS.filter((p) => p.category_id === categoryId && p.id !== excludeId).slice(0, 4);
   }
@@ -146,9 +147,9 @@ export async function getRelatedProducts(categoryId: string, excludeId: string):
   } catch {
     return MOCK_PRODUCTS.filter((p) => p.category_id === categoryId && p.id !== excludeId).slice(0, 4);
   }
-}
+});
 
-export async function searchProducts(q: string): Promise<Product[]> {
+export const searchProducts = cache(async function searchProducts(q: string): Promise<Product[]> {
   if (!CONFIGURED) {
     const query = q.toLowerCase();
     return MOCK_PRODUCTS.filter(
@@ -166,7 +167,7 @@ export async function searchProducts(q: string): Promise<Product[]> {
     const supabase = await createClient();
     const { data } = await supabase
       .from("products")
-      .select(`*, category:categories(id,name,slug), variants:gem_variants(*, images:gem_images(*))`)
+      .select(`*, category:categories(id,name,slug), variants:gem_variants(*, images:gem_images(*))`, { count: "exact" })
       .eq("is_active", true)
       .or(`name.ilike.%${q}%,description.ilike.%${q}%`)
       .limit(48);
@@ -174,4 +175,4 @@ export async function searchProducts(q: string): Promise<Product[]> {
   } catch {
     return searchProducts(q);
   }
-}
+});

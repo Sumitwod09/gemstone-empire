@@ -1,16 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { getFeaturedProducts } from "@/lib/db";
 import { MOCK_REVIEWS } from "@/lib/mock-data";
 import { TrustBar } from "@/components/storefront/TrustBar";
-import { ReviewCard } from "@/components/storefront/ReviewCard";
-import { PartnerLogos } from "@/components/storefront/PartnerLogos";
 import { Button } from "@/components/ui";
+
+// Dynamically import below-the-fold components with fallback placeholders for instant initial page paint
+const ReviewCard = dynamic(
+  () => import("@/components/storefront/ReviewCard").then((mod) => mod.ReviewCard),
+  {
+    loading: () => <div className="h-48 bg-white border border-gray-100 rounded-md animate-pulse" />,
+    ssr: true,
+  }
+);
+
+const PartnerLogos = dynamic(
+  () => import("@/components/storefront/PartnerLogos").then((mod) => mod.PartnerLogos),
+  {
+    loading: () => <div className="h-28 bg-white animate-pulse" />,
+    ssr: true,
+  }
+);
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faBookOpen,
-} from "@fortawesome/free-solid-svg-icons";
+import { faBookOpen } from "@fortawesome/free-solid-svg-icons";
 
 export const metadata: Metadata = {
   title: "Gemstone Empire — Premium Loose Gemstones",
@@ -112,10 +127,24 @@ export default async function HomePage() {
                 {/* Two Overlapping Gemstone Images */}
                 <div className="flex justify-center -space-x-4 mb-4">
                   <div className="w-14 h-14 rounded-full overflow-hidden shadow-md border-2 border-white relative z-10">
-                    <img src={cat.img1} alt={`${cat.name} Sample 1`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    <Image
+                      src={cat.img1}
+                      alt={`${cat.name} Sample 1`}
+                      width={56}
+                      height={56}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="w-14 h-14 rounded-full overflow-hidden shadow-md border-2 border-white relative">
-                    <img src={cat.img2} alt={`${cat.name} Sample 2`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    <Image
+                      src={cat.img2}
+                      alt={`${cat.name} Sample 2`}
+                      width={56}
+                      height={56}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
                   </div>
                 </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import type { Category } from "@/types";
 
 const SHAPES = ["oval", "round", "cushion", "pear", "marquise", "emerald", "heart", "trillion", "octagon"];
@@ -19,6 +19,20 @@ export function FilterSidebar({ categories }: FilterSidebarProps) {
 
   const get = (key: string) => searchParams.get(key) ?? "";
 
+  // Local state to prevent router navigation spam on every keystroke
+  const [priceMin, setPriceMin] = useState(get("price_min"));
+  const [priceMax, setPriceMax] = useState(get("price_max"));
+  const [caratMin, setCaratMin] = useState(get("carat_min"));
+  const [caratMax, setCaratMax] = useState(get("carat_max"));
+
+  // Sync state if searchParams change externally (e.g. on Clear All)
+  useEffect(() => {
+    setPriceMin(get("price_min"));
+    setPriceMax(get("price_max"));
+    setCaratMin(get("carat_min"));
+    setCaratMax(get("carat_max"));
+  }, [searchParams]);
+
   const update = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -32,6 +46,16 @@ export function FilterSidebar({ categories }: FilterSidebarProps) {
     },
     [pathname, router, searchParams]
   );
+
+  const handleApply = (key: string, value: string) => {
+    update(key, value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, key: string, value: string) => {
+    if (e.key === "Enter") {
+      handleApply(key, value);
+    }
+  };
 
   const clearAll = () => {
     router.push(pathname);
@@ -111,16 +135,20 @@ export function FilterSidebar({ categories }: FilterSidebarProps) {
             <input
               type="number"
               placeholder="Min"
-              value={get("price_min")}
-              onChange={(e) => update("price_min", e.target.value)}
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+              onBlur={() => handleApply("price_min", priceMin)}
+              onKeyDown={(e) => handleKeyDown(e, "price_min", priceMin)}
               className="w-16 border border-gray-300 rounded px-2 py-1 bg-white text-gray-800 focus:border-[#006B3F] outline-none"
             />
             <span className="text-gray-400">–</span>
             <input
               type="number"
               placeholder="Max"
-              value={get("price_max")}
-              onChange={(e) => update("price_max", e.target.value)}
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+              onBlur={() => handleApply("price_max", priceMax)}
+              onKeyDown={(e) => handleKeyDown(e, "price_max", priceMax)}
               className="w-16 border border-gray-300 rounded px-2 py-1 bg-white text-gray-800 focus:border-[#006B3F] outline-none"
             />
           </div>
@@ -134,8 +162,10 @@ export function FilterSidebar({ categories }: FilterSidebarProps) {
               type="number"
               step="0.01"
               placeholder="Min"
-              value={get("carat_min")}
-              onChange={(e) => update("carat_min", e.target.value)}
+              value={caratMin}
+              onChange={(e) => setCaratMin(e.target.value)}
+              onBlur={() => handleApply("carat_min", caratMin)}
+              onKeyDown={(e) => handleKeyDown(e, "carat_min", caratMin)}
               className="w-16 border border-gray-300 rounded px-2 py-1 bg-white text-gray-800 focus:border-[#006B3F] outline-none"
             />
             <span className="text-gray-400">–</span>
@@ -143,8 +173,10 @@ export function FilterSidebar({ categories }: FilterSidebarProps) {
               type="number"
               step="0.01"
               placeholder="Max"
-              value={get("carat_max")}
-              onChange={(e) => update("carat_max", e.target.value)}
+              value={caratMax}
+              onChange={(e) => setCaratMax(e.target.value)}
+              onBlur={() => handleApply("carat_max", caratMax)}
+              onKeyDown={(e) => handleKeyDown(e, "carat_max", caratMax)}
               className="w-16 border border-gray-300 rounded px-2 py-1 bg-white text-gray-800 focus:border-[#006B3F] outline-none"
             />
           </div>
