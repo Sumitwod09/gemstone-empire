@@ -1,11 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
-import { notFound } from "next/navigation";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "@/lib/mock-data";
+import { use, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ProductEditForm } from "./ProductEditForm";
 import { VariantList } from "./VariantList";
-import type { Product, GemVariant } from "@/types";
+import type { Product, GemVariant, Category } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,14 +13,40 @@ interface PageProps {
 export default function ProductEditPage({ params }: PageProps) {
   const { id } = use(params);
   const isNew = id === "new";
+  const router = useRouter();
 
-  const initialProduct = isNew ? null : MOCK_PRODUCTS.find((p) => p.id === id);
-  const [product, setProduct] = useState<Product | null>(initialProduct || null);
-  const [variants, setVariants] = useState<GemVariant[]>(initialProduct?.variants || []);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [variants, setVariants] = useState<GemVariant[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!isNew && !initialProduct) {
-    notFound();
-  }
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const catRes = await fetch("/api/admin/categories");
+        if (catRes.ok) setCategories(await catRes.json());
+
+        if (!isNew) {
+          const prodRes = await fetch("/api/admin/products");
+          if (prodRes.ok) {
+            const allProducts: Product[] = await prodRes.json();
+            const found = allProducts.find((p) => p.id === id);
+            if (found) {
+              setProduct(found);
+              setVariants(found.variants || []);
+            } else {
+              router.push("/admin/products");
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load edit product data", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [id, isNew, router]);
 
   const handleSaveProduct = (updatedProduct: Product) => {
     setProduct(updatedProduct);
@@ -34,6 +59,10 @@ export default function ProductEditPage({ params }: PageProps) {
   const handleDeleteVariant = (variantId: string) => {
     setVariants((prev) => prev.filter((v) => v.id !== variantId));
   };
+
+  if (loading) {
+    return <div className="text-gray-400 text-xs py-8">Loading product details...</div>;
+  }
 
   return (
     <div className="max-w-3xl">
@@ -48,7 +77,7 @@ export default function ProductEditPage({ params }: PageProps) {
 
       <ProductEditForm
         product={product}
-        categories={MOCK_CATEGORIES}
+        categories={categories}
         onSave={handleSaveProduct}
       />
 

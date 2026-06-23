@@ -1,20 +1,27 @@
-import type { Metadata } from "next";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+"use client";
+
+import { useState, useEffect } from "react";
 import { InventoryTable } from "./InventoryTable";
 
-export const metadata: Metadata = { title: "Inventory — Admin" };
-
 export default function AdminInventoryPage() {
-  const variants = MOCK_PRODUCTS.flatMap((p) =>
-    (p.variants ?? []).map((v) => ({
-      id: v.id,
-      sku: v.sku,
-      stock_qty: v.stock_qty,
-      shape: v.shape,
-      carat_weight: v.carat_weight,
-      product: { name: p.name },
-    }))
-  ).sort((a, b) => a.stock_qty - b.stock_qty);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchVariants() {
+      try {
+        const res = await fetch("/api/admin/variants");
+        if (res.ok) {
+          setVariants(await res.json());
+        }
+      } catch (err) {
+        console.error("Failed to load inventory", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchVariants();
+  }, []);
 
   return (
     <div>
@@ -22,7 +29,11 @@ export default function AdminInventoryPage() {
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Inventory</h1>
         <p className="text-xs text-gray-400 mt-0.5">Manage gemstone variant stock quantities</p>
       </div>
-      <InventoryTable variants={variants} />
+      {loading ? (
+        <div className="text-gray-400 text-xs py-8">Loading inventory data...</div>
+      ) : (
+        <InventoryTable variants={variants} />
+      )}
     </div>
   );
 }

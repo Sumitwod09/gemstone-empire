@@ -16,7 +16,7 @@ export default function AboutPage() {
           WHO WE ARE
         </h1>
         <p className="text-lg text-gray-500 max-w-xl mx-auto">
-          Since 2005, Gemstone Empire has curated the world's most exceptional loose natural gemstones for collectors and connoisseurs.
+          Since 2026, Gemstone Empire has curated the world's most exceptional loose natural gemstones for collectors and connoisseurs.
         </p>
         <div className="w-16 h-1 bg-[#00A896] mx-auto rounded-full mt-4"></div>
       </div>
@@ -28,7 +28,7 @@ export default function AboutPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600 leading-relaxed">
           <p>
-            For over two decades, our experts have traveled directly to the legendary mines of Colombia, Sri Lanka (Ceylon), Mozambique, Madagascar, and Burma to select only the finest rubies, sapphires, emeralds, and spinels. By procuring gemstones directly at the source, we ensure absolute natural origin and offer unbeatable pricing.
+            With decades of collective experience, our experts travel directly to the legendary mines of Colombia, Sri Lanka (Ceylon), Mozambique, Madagascar, and Burma to select only the finest rubies, sapphires, emeralds, and spinels. By procuring gemstones directly at the source, we ensure absolute natural origin and offer unbeatable pricing.
           </p>
           <p>
             We believe that every precious gemstone tells a story. Our collection strictly comprises natural, certified stones that are chosen for their outstanding brilliance, rarity, and crystal purity. We maintain standard ethical-sourcing protocols for every single item.

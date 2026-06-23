@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           3. Security Measures
         </h2>
         <p>
-          We implement industry-grade security measures including Secure Socket Layer (SSL) encryption, firewalls, and tokens to shield your data. Financial checkout details are securely processed directly by our merchant bank providers (Stripe/Razorpay) and are never stored on our servers.
+          We implement industry-grade security measures including Secure Socket Layer (SSL) encryption, firewalls, and tokens to shield your data. Financial details are processed securely by our banking partners and are never stored on our servers.
         </p>
 
         <h2 className="text-2xl font-bold text-gray-900 border-b border-gray-100 pb-3 pt-4 font-logo">

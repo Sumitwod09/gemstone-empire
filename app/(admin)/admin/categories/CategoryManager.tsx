@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { categorySchema, type CategoryFormData } from "@/lib/validators";
-import { Input, Textarea, Button, Badge } from "@/components/ui";
+import { Input, Textarea, Button } from "@/components/ui";
 import { slugify } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Category } from "@/types";
@@ -47,53 +47,72 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
 
   const onSubmit = async (data: CategoryFormData) => {
     setLoading(true);
-    // Simulate slight latency for premium feel
-    await new Promise((resolve) => setTimeout(resolve, 600));
 
-    if (editing) {
-      setCategories((prev) =>
-        prev.map((c) =>
-          c.id === editing.id
-            ? ({
-                ...c,
-                name: data.name,
-                slug: data.slug,
-                description: data.description || undefined,
-                image_url: data.image_url || undefined,
-                sort_order: data.sort_order ?? 0,
-                is_active: !!data.is_active,
-                meta_title: data.meta_title || undefined,
-                meta_description: data.meta_description || undefined,
-              } as Category)
-            : c
-        )
-      );
-      toast.success("Category updated (Local Mock Mode)");
-    } else {
-      const newCat: Category = {
-        id: `cat-${Date.now()}`,
-        name: data.name,
-        slug: data.slug,
-        description: data.description || undefined,
-        image_url: data.image_url || undefined,
-        sort_order: data.sort_order ?? 0,
-        is_active: !!data.is_active,
-        meta_title: data.meta_title || undefined,
-        meta_description: data.meta_description || undefined,
-        created_at: new Date().toISOString(),
-      };
-      setCategories((prev) => [...prev, newCat]);
-      toast.success("Category created (Local Mock Mode)");
+    try {
+      if (editing) {
+        const res = await fetch("/api/admin/categories", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editing.id,
+            name: data.name,
+            slug: data.slug,
+            description: data.description || null,
+            image_url: data.image_url || null,
+            sort_order: data.sort_order ?? 0,
+            is_active: !!data.is_active,
+            meta_title: data.meta_title || null,
+            meta_description: data.meta_description || null,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to update category");
+        const updated = await res.json();
+        setCategories((prev) => prev.map((c) => (c.id === editing.id ? updated : c)));
+        toast.success("Category updated successfully");
+      } else {
+        const res = await fetch("/api/admin/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            slug: data.slug,
+            description: data.description || null,
+            image_url: data.image_url || null,
+            sort_order: data.sort_order ?? 0,
+            is_active: !!data.is_active,
+            meta_title: data.meta_title || null,
+            meta_description: data.meta_description || null,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to create category");
+        const created = await res.json();
+        setCategories((prev) => [...prev, created]);
+        toast.success("Category created successfully");
+      }
+      setShowForm(false);
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-    setShowForm(false);
   };
 
-  const deleteCategory = (id: string) => {
-    if (!confirm("Delete this category?")) return;
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    toast.success("Category deleted (Local Mock Mode)");
+  const deleteCategory = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this category? All products using it will be affected.")) return;
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete category");
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Category deleted");
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    }
   };
 
   return (

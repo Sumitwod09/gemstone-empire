@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const checkoutSchema = z.object({
+  email: z.string().email("Valid email required").optional().or(z.literal("")),
   full_name: z.string().min(2, "Full name is required"),
   phone: z.string().min(7, "Valid phone number required"),
   line1: z.string().min(5, "Address is required"),
@@ -10,6 +11,7 @@ export const checkoutSchema = z.object({
   country: z.string().min(2, "Country is required"),
   zip: z.string().min(4, "ZIP code is required"),
   notes: z.string().optional(),
+  coupon_code: z.string().optional(),
 });
 
 export const contactSchema = z.object({
@@ -79,6 +81,23 @@ export const categorySchema = z.object({
   meta_description: z.string().optional(),
 });
 
+export const reviewSchema = z.object({
+  product_id: z.string().uuid("Valid product required"),
+  rating: z.number().int().min(1, "Rating must be 1-5").max(5, "Rating must be 1-5"),
+  title: z.string().optional(),
+  body: z.string().optional(),
+});
+
+export const couponSchema = z.object({
+  code: z.string().min(2, "Code is required").transform((v) => v.toUpperCase()),
+  discount_type: z.enum(["percentage", "flat"]),
+  discount_value: z.number().positive("Discount value must be positive"),
+  min_order_value: z.number().min(0).optional(),
+  max_uses: z.number().int().positive().optional().nullable(),
+  is_active: z.boolean().optional(),
+  expires_at: z.string().optional().nullable(),
+});
+
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 export type ContactFormData = z.infer<typeof contactSchema>;
 export type ProfileFormData = z.infer<typeof profileSchema>;
@@ -86,3 +105,5 @@ export type AddressFormData = z.infer<typeof addressSchema>;
 export type ProductFormData = z.infer<typeof productSchema>;
 export type VariantFormData = z.infer<typeof variantSchema>;
 export type CategoryFormData = z.infer<typeof categorySchema>;
+export type ReviewFormData = z.infer<typeof reviewSchema>;
+export type CouponFormData = z.infer<typeof couponSchema>;

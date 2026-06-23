@@ -32,45 +32,62 @@ export function VariantList({ productId, variants, onAddVariant, onDeleteVariant
 
   const onSubmit = async (data: VariantFormData) => {
     setLoading(true);
-    // Simulate server latency
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const newVar: GemVariant = {
-      id: `var-${Date.now()}`,
-      product_id: productId,
-      sku: data.sku,
-      price: data.price,
-      stock_qty: data.stock_qty,
-      shape: data.shape,
-      carat_weight: data.carat_weight,
-      color: data.color,
-      color_grade: data.color_grade ?? "AAA",
-      clarity: data.clarity ?? "Eye-clean",
-      treatment: data.treatment ?? "none",
-      origin: data.origin ?? "Unknown",
-      cut_grade: data.cut_grade ?? "excellent",
-      length_mm: data.length_mm ?? data.carat_weight * 3.8,
-      width_mm: data.width_mm ?? data.carat_weight * 3.0,
-      depth_mm: data.depth_mm ?? data.carat_weight * 2.2,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      images: [],
-    };
+    try {
+      const res = await fetch("/api/admin/variants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: productId,
+          sku: data.sku,
+          price: data.price,
+          stock_qty: data.stock_qty,
+          shape: data.shape,
+          carat_weight: data.carat_weight,
+          color: data.color,
+          color_grade: data.color_grade ?? "AAA",
+          clarity: data.clarity ?? "Eye-clean",
+          treatment: data.treatment ?? "none",
+          origin: data.origin ?? "Unknown",
+          cut_grade: data.cut_grade ?? "excellent",
+          length_mm: data.length_mm ?? null,
+          width_mm: data.width_mm ?? null,
+          depth_mm: data.depth_mm ?? null,
+          is_active: true,
+        }),
+      });
 
-    if (onAddVariant) onAddVariant(newVar);
-    toast.success("Variant added (Local Mock)");
-    reset();
-    setShowForm(false);
-    setLoading(false);
+      if (!res.ok) throw new Error("Failed to add variant");
+      const created = await res.json();
+
+      if (onAddVariant) onAddVariant(created);
+      toast.success("Variant added successfully");
+      reset();
+      setShowForm(false);
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deleteVariant = async (id: string) => {
-    if (!confirm("Delete this variant?")) return;
+    if (!confirm("Are you sure you want to delete this variant?")) return;
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    if (onDeleteVariant) onDeleteVariant(id);
-    toast.success("Variant deleted (Local Mock)");
-    setLoading(false);
+    try {
+      const res = await fetch("/api/admin/variants", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete variant");
+      if (onDeleteVariant) onDeleteVariant(id);
+      toast.success("Variant deleted");
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,7 +101,7 @@ export function VariantList({ productId, variants, onAddVariant, onDeleteVariant
             </p>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className="font-extrabold text-gray-900">{formatPrice(v.price)}</span>
+            <span className="font-extrabold text-gray-900">{formatPrice(Number(v.price))}</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
               v.stock_qty === 0 
                 ? "bg-red-50 text-red-700 border border-red-100" 

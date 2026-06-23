@@ -43,42 +43,74 @@ export function ProductEditForm({ product, categories, onSave }: ProductEditForm
 
   const onSubmit = async (data: ProductFormData) => {
     setLoading(true);
-    // Simulate slight server latency
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      if (product) {
+        // Update product
+        const res = await fetch("/api/admin/products", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: product.id,
+            name: data.name,
+            slug: data.slug,
+            description: data.description || null,
+            category_id: data.category_id,
+            is_active: !!data.is_active,
+            is_featured: !!data.is_featured,
+            meta_title: data.meta_title || null,
+            meta_description: data.meta_description || null,
+          }),
+        });
 
-    const selectedCategory = categories.find((c) => c.id === data.category_id);
+        if (!res.ok) throw new Error("Failed to update product");
+        const updated = await res.json();
+        if (onSave) onSave(updated);
+        toast.success("Product updated successfully");
+      } else {
+        // Create product
+        const res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            slug: data.slug,
+            description: data.description || null,
+            category_id: data.category_id,
+            is_active: !!data.is_active,
+            is_featured: !!data.is_featured,
+            meta_title: data.meta_title || null,
+            meta_description: data.meta_description || null,
+          }),
+        });
 
-    const savedProduct: Product = {
-      id: product?.id ?? `prod-${Date.now()}`,
-      name: data.name,
-      slug: data.slug,
-      description: data.description || undefined,
-      category_id: data.category_id,
-      is_active: !!data.is_active,
-      is_featured: !!data.is_featured,
-      meta_title: data.meta_title || undefined,
-      meta_description: data.meta_description || undefined,
-      created_at: product?.created_at ?? new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      category: selectedCategory ? { id: selectedCategory.id, name: selectedCategory.name, slug: selectedCategory.slug, sort_order: 0, is_active: true, created_at: "" } : undefined,
-      variants: product?.variants ?? [],
-    };
-
-    if (onSave) onSave(savedProduct);
-    toast.success(product ? "Product changes saved (Local Mock)" : "Product created successfully (Local Mock)");
-    
-    if (!product) {
-      router.push(`/admin/products/${savedProduct.id}`);
+        if (!res.ok) throw new Error("Failed to create product");
+        const created = await res.json();
+        toast.success("Product created successfully");
+        router.push(`/admin/products/${created.id}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const deleteProduct = async () => {
-    if (!product || !confirm("Delete this product?")) return;
+    if (!product || !confirm("Delete this product? All variants and history will be lost.")) return;
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    toast.success("Product deleted (Local Mock)");
-    router.push("/admin/products");
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: product.id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete product");
+      toast.success("Product deleted successfully");
+      router.push("/admin/products");
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred");
+      setLoading(false);
+    }
   };
 
   return (

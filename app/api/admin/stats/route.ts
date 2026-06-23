@@ -1,36 +1,40 @@
-import { createServiceClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.app_metadata?.role !== "admin") return null;
-  return user;
+  if (!user) return { supabase: null, error: "Unauthorized" };
+  const isAdmin = user.app_metadata?.role === "admin";
+  if (!isAdmin) return { supabase: null, error: "Forbidden" };
+  return { supabase, error: null, user };
 }
 
 export async function GET() {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const supabase = await createServiceClient();
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  const { supabase, error } = await requireAdmin();
+  if (error || !supabase) return NextResponse.json({ error }, { status: 403 });
 
   const [
-    { data: revenueData },
     { count: totalOrders },
     { count: pendingOrders },
     { count: totalProducts },
+    { count: totalCustomers },
+    { data: revenueData },
   ] = await Promise.all([
-    supabase.from("orders").select("total").eq("payment_status", "paid").gte("created_at", startOfMonth.toISOString()),
     supabase.from("orders").select("*", { count: "exact", head: true }),
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("orders").select("total").eq("payment_status", "paid"),
   ]);
 
-  const total_revenue = revenueData?.reduce((sum: number, o: any) => sum + Number(o.total), 0) ?? 0;
+  const totalRevenue = (revenueData ?? []).reduce((sum: number, o: any) => sum + Number(o.total), 0);
 
-  return NextResponse.json({ total_revenue, total_orders: totalOrders, pending_orders: pendingOrders, total_products: totalProducts });
+  return NextResponse.json({
+    total_revenue: totalRevenue,
+    total_orders: totalOrders ?? 0,
+    pending_orders: pendingOrders ?? 0,
+    total_products: totalProducts ?? 0,
+    total_customers: totalCustomers ?? 0,
+  });
 }

@@ -23,14 +23,23 @@ export function InventoryTable({ variants: initialVariants }: InventoryTableProp
 
   const updateStock = async (id: string, qty: number) => {
     setSaving(id);
-    // Simulate latency for premium feel
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    setVariants((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, stock_qty: qty } : v))
-    );
-    toast.success("Stock level updated (Local Mock Mode)");
-    setSaving(null);
+    try {
+      const res = await fetch("/api/admin/variants", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, stock_qty: qty }),
+      });
+      if (!res.ok) throw new Error("Failed to update stock");
+      
+      setVariants((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, stock_qty: qty } : v))
+      );
+      toast.success("Stock level updated successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update stock");
+    } finally {
+      setSaving(null);
+    }
   };
 
   return (

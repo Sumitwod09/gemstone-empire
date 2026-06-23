@@ -1,7 +1,7 @@
 export function TrustBar() {
   const BADGES = [
     "Natural Gemstones",
-    "Since 2005",
+    "Since 2026",
     "150+ Gem Types",
     "Worldwide Shipping",
     "30-Day Returns",

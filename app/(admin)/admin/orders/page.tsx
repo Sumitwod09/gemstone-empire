@@ -1,32 +1,45 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, formatDate } from "@/lib/utils";
+import type { Order } from "@/types";
 
-export const metadata: Metadata = { title: "Orders — Admin" };
-
-const MOCK_ORDERS = [
-  { id: "ord-1", order_number: "GE-2026-001", customer: "James Richardson", email: "james@example.com", date: "2026-06-18", status: "delivered", payment: "paid", total: 4200 },
-  { id: "ord-2", order_number: "GE-2026-002", customer: "Sarah Chen", email: "sarah@example.com", date: "2026-06-17", status: "shipped", payment: "paid", total: 3800 },
-  { id: "ord-3", order_number: "GE-2026-003", customer: "Marco Bellini", email: "marco@example.com", date: "2026-06-16", status: "processing", payment: "paid", total: 8500 },
-  { id: "ord-4", order_number: "GE-2026-004", customer: "Emma Thompson", email: "emma@example.com", date: "2026-06-15", status: "pending", payment: "pending", total: 2900 },
-  { id: "ord-5", order_number: "GE-2026-005", customer: "David Park", email: "david@example.com", date: "2026-06-14", status: "delivered", payment: "paid", total: 1800 },
-  { id: "ord-6", order_number: "GE-2026-006", customer: "Lisa Müller", email: "lisa@example.com", date: "2026-06-13", status: "delivered", payment: "paid", total: 6200 },
-  { id: "ord-7", order_number: "GE-2026-007", customer: "Hiroshi Tanaka", email: "hiroshi@example.com", date: "2026-06-12", status: "cancelled", payment: "refunded", total: 18500 },
-  { id: "ord-8", order_number: "GE-2026-008", customer: "Katarina Petrova", email: "katarina@example.com", date: "2026-06-11", status: "shipped", payment: "paid", total: 9800 },
-  { id: "ord-9", order_number: "GE-2026-009", customer: "Arthur Pendelton", email: "arthur@example.com", date: "2026-06-10", status: "processing", payment: "paid", total: 22800 },
-  { id: "ord-10", order_number: "GE-2026-010", customer: "Guest Buyer", email: "guest@example.com", date: "2026-06-09", status: "pending", payment: "pending", total: 7200 },
-];
-
-const STATUSES = ["all", "pending", "processing", "shipped", "delivered", "cancelled", "refunded"] as const;
+const STATUSES = ["all", "pending", "confirmed", "shipped", "delivered", "cancelled", "refunded"] as const;
 
 export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  useEffect(() => {
+    async function fetchOrders() {
+      setLoading(true);
+      try {
+        const url = selectedStatus === "all" ? "/api/admin/orders" : `/api/admin/orders?status=${selectedStatus}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setOrders(data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOrders();
+  }, [selectedStatus]);
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{MOCK_ORDERS.length} total orders</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {loading ? "Loading..." : `${orders.length} total orders`}
+          </p>
         </div>
       </div>
 
@@ -35,8 +48,9 @@ export default function AdminOrdersPage() {
         {STATUSES.map((s) => (
           <button
             key={s}
+            onClick={() => setSelectedStatus(s)}
             className={`px-3 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${
-              s === "all"
+              selectedStatus === s
                 ? "bg-emerald-600 text-white shadow-sm"
                 : "bg-white text-gray-500 border border-gray-200 hover:border-emerald-300 hover:text-emerald-700"
             }`}
@@ -62,30 +76,57 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_ORDERS.map((order, i) => (
-                <tr key={order.id} className={`border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors ${i % 2 === 1 ? "bg-gray-50/30" : ""}`}>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/orders/${order.id}`} className="text-emerald-700 hover:underline font-semibold text-xs">
-                      {order.order_number}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-xs font-medium text-gray-800">{order.customer}</p>
-                    <p className="text-[10px] text-gray-400">{order.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-400">{order.date}</td>
-                  <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
-                  <td className="px-4 py-3"><StatusBadge status={order.payment} /></td>
-                  <td className="px-4 py-3 text-right font-bold text-gray-800 text-xs">{formatPrice(order.total)}</td>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/orders/${order.id}`}>
-                      <button className="text-xs text-emerald-600 hover:text-emerald-800 font-semibold hover:underline">
-                        View
-                      </button>
-                    </Link>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-xs">
+                    Loading orders...
                   </td>
                 </tr>
-              ))}
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-xs">
+                    No orders found
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order, i) => (
+                  <tr
+                    key={order.id}
+                    className={`border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors ${
+                      i % 2 === 1 ? "bg-gray-50/30" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3">
+                      <Link href={`/admin/orders/${order.id}`} className="text-emerald-700 hover:underline font-semibold text-xs font-mono">
+                        {order.order_number}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs font-medium text-gray-800">
+                        {order.profile?.full_name || order.shipping_address?.full_name || "Guest"}
+                      </p>
+                      <p className="text-[10px] text-gray-400">{order.guest_email || order.profile?.email || "—"}</p>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400">{formatDate(order.created_at)}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={order.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={order.payment_status} />
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-gray-800 text-xs">
+                      {formatPrice(Number(order.total))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/admin/orders/${order.id}`}>
+                        <button className="text-xs text-emerald-600 hover:text-emerald-800 font-semibold hover:underline">
+                          View
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

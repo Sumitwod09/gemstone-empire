@@ -9,23 +9,24 @@ import { Price } from "@/components/storefront/Price";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { calculateShipping } from "@/lib/utils";
 import type { Address } from "@/types";
 
 interface CheckoutFormProps {
   savedAddresses?: Address[];
 }
 
-declare global {
-  interface Window {
-    Razorpay: new (options: Record<string, unknown>) => { open(): void };
-  }
-}
-
 export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
   const { items, subtotal, clearCart } = useCart();
+  const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const {
     register,
@@ -50,8 +51,35 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
     setValue("zip", addr.zip);
   };
 
-  const shipping = subtotal > 500 ? 0 : 25;
-  const total = subtotal + shipping;
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, subtotal }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setDiscount(data.discount_amount);
+        setAppliedCoupon(data.code);
+        toast.success(`Coupon applied! You save $${data.discount_amount.toFixed(2)}`);
+      } else {
+        toast.error(data.error || "Invalid coupon code");
+        setDiscount(0);
+        setAppliedCoupon(null);
+      }
+    } catch {
+      toast.error("Failed to validate coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const discountedSubtotal = subtotal - discount;
+  const shipping = calculateShipping(discountedSubtotal);
+  const total = discountedSubtotal + shipping;
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!items.length) return;
@@ -67,58 +95,17 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
             quantity: i.quantity,
           })),
           shippingAddress: data,
+          coupon_code: appliedCoupon,
+          guest_email: !user ? data.email : undefined,
         }),
       });
 
       if (!res.ok) throw new Error("Failed to create order");
       const order = await res.json();
 
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => {
-        const rzp = new window.Razorpay({
-          key: order.key,
-          amount: order.amount,
-          currency: order.currency,
-          order_id: order.razorpayOrderId,
-          name: "Gemstone Empire",
-          description: `Order ${order.orderId}`,
-          handler: async (response: {
-            razorpay_payment_id: string;
-            razorpay_order_id: string;
-            razorpay_signature: string;
-          }) => {
-            const verifyRes = await fetch("/api/orders/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                orderId: order.orderId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            if (verifyRes.ok) {
-              clearCart();
-              router.push(`/order/${order.orderId}`);
-            } else {
-              toast.error("Payment verification failed. Please contact support.");
-              setLoading(false);
-            }
-          },
-          modal: {
-            ondismiss: () => setLoading(false),
-          },
-          prefill: {
-            name: data.full_name,
-            contact: data.phone,
-          },
-          theme: { color: "#006B3F" },
-        });
-        rzp.open();
-      };
-      document.body.appendChild(script);
-    } catch (err) {
+      clearCart();
+      router.push(`/order/${order.orderId}`);
+    } catch {
       toast.error("Something went wrong. Please try again.");
       setLoading(false);
     }
@@ -128,6 +115,25 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
     <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-8">
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Guest Email */}
+        {!user && (
+          <div>
+            <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-4">
+              Contact Information
+            </h2>
+            <Input
+              label="Email Address"
+              type="email"
+              {...register("email")}
+              error={errors.email?.message}
+              placeholder="your@email.com"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Order confirmation and updates will be sent to this email.
+            </p>
+          </div>
+        )}
+
         <div>
           <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-4">
             Shipping Address
@@ -200,9 +206,23 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
           </div>
         </div>
 
+        <div>
+          <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-3">
+            Order Notes (optional)
+          </h2>
+          <textarea
+            {...register("notes")}
+            placeholder="Any special instructions..."
+            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-[6px] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none h-20"
+          />
+        </div>
+
         <Button type="submit" className="w-full" size="lg" loading={loading}>
-          Place Order & Pay
+          Place Order
         </Button>
+        <p className="text-xs text-center text-gray-400">
+          Your order will be confirmed after payment is received via bank transfer or UPI.
+        </p>
       </form>
 
       {/* Order Summary */}
@@ -220,15 +240,64 @@ export function CheckoutForm({ savedAddresses = [] }: CheckoutFormProps) {
             </div>
           ))}
         </div>
+
+        {/* Coupon */}
+        <div className="border-t border-[var(--color-border)] pt-3 mb-3">
+          <label className="text-xs font-medium text-gray-600 mb-1.5 block">Coupon Code</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="WELCOME10"
+              disabled={!!appliedCoupon}
+              className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-[6px] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
+            />
+            {appliedCoupon ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setAppliedCoupon(null);
+                  setDiscount(0);
+                  setCouponCode("");
+                }}
+              >
+                Remove
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={applyCoupon}
+                loading={couponLoading}
+              >
+                Apply
+              </Button>
+            )}
+          </div>
+        </div>
+
         <div className="border-t border-[var(--color-border)] pt-3 flex flex-col gap-2">
           <div className="flex justify-between text-sm">
             <span className="text-[var(--color-text-secondary)]">Subtotal</span>
             <span><Price amount={subtotal} /></span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-sm text-emerald-600">
+              <span>Discount ({appliedCoupon})</span>
+              <span>-<Price amount={discount} /></span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-[var(--color-text-secondary)]">Shipping</span>
-            <span>{shipping === 0 ? "Free" : <Price amount={shipping} />}</span>
+            <span>{shipping === 0 ? <span className="text-emerald-600 font-medium">Free</span> : <Price amount={shipping} />}</span>
           </div>
+          {shipping > 0 && (
+            <p className="text-[10px] text-gray-400">Free shipping on orders over $1,000</p>
+          )}
           <div className="flex justify-between text-base font-semibold pt-2 border-t border-[var(--color-border)]">
             <span>Total</span>
             <span><Price amount={total} /></span>

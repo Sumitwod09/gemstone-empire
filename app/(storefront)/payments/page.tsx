@@ -40,7 +40,7 @@ export default function PaymentsPage() {
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 space-y-3">
             <h3 className="font-bold text-[#004D2B] text-base">UPI & NetBanking</h3>
             <p className="text-xs">
-              For collectors in India, we support seamless instant UPI, NetBanking, and credit wallets through our integrated Razorpay checkout.
+              For collectors in India, we support seamless instant UPI and NetBanking payments. Payment details are provided on the order confirmation page.
             </p>
           </div>
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 space-y-3">

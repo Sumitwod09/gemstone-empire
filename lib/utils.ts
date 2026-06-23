@@ -46,10 +46,14 @@ export function formatDimensions(
   return `${l.toFixed(1)} × ${w.toFixed(1)} × ${d.toFixed(1)} mm`;
 }
 
+export function calculateShipping(subtotal: number): number {
+  return subtotal >= 1000 ? 0 : 50;
+}
+
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
     pending: "warning",
-    processing: "accent",
+    confirmed: "accent",
     shipped: "accent",
     delivered: "success",
     cancelled: "error",

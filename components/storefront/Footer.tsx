@@ -168,7 +168,7 @@ export function Footer() {
       <div className="border-t border-white/10 py-6 text-center">
         <div className="max-w-screen-xl mx-auto px-6 space-y-2">
           <p className="text-[10px] text-emerald-200/50">
-            Copyright © 2005-{year} GemstoneEmpire.com. All rights reserved.
+            Copyright © {year === 2026 ? "2026" : `2026-${year}`} GemstoneEmpire.com. All rights reserved.
           </p>
           <p className="text-[9px] text-emerald-200/30 max-w-xl mx-auto leading-relaxed">
             Reproduction or reuse of any photos, graphics or written text without written consent of GemstoneEmpire.com is strictly prohibited. All items are shipped with fully insured tracking.

@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { AddToCartSection } from "./AddToCartSection";
 import { formatCarat, formatDimensions } from "@/lib/utils";
 import { Price } from "@/components/storefront/Price";
+import { ProductReviews } from "@/components/storefront/ProductReviews";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -185,6 +186,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </p>
         </section>
       )}
+
+      {/* Reviews section */}
+      <section className="mt-10 border-t border-gray-200 pt-8">
+        <ProductReviews productId={product.id} />
+      </section>
 
       {/* Related Gems */}
       {related.length > 0 && (
